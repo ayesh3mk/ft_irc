@@ -1,13 +1,3 @@
-	// •	461 need more params
-	// •	407 too many channels (targets)
-	// •	403 bad channel (no #)
-	// •	405 already in too many channels
-	// •	475 bad key (+k)
-	// •	473 invite-only (+i)
-	// •	471 channel full (+l)
-	// •	(Optional) 443 already on channel
-	// •	331/332/333 topic replies
-
 #include "Server.hpp"
 #include "Channel.hpp"
 #include "Client.hpp"
@@ -25,7 +15,7 @@ void Server::sendResponse(int fd, const std::string& msg)
     // If you already have _sendResponse(fd, msg), call that instead.
     // This version writes directly on the socket.
     if (fd < 0 || msg.empty()) return;
-    (void)send(fd, msg.c_str(), msg.size(), 0);
+        (void)send(fd, msg.c_str(), msg.size(), 0);
 }
 
 
@@ -128,10 +118,6 @@ void Server::ExistCh(std::vector<std::pair<std::string,std::string> >& token,
     if (!cli || !ch) return;
 
     const std::string nick = cli->GetNickName();
-    if (ch->GetClientInChannel(nick)) {
-        sendResponse(fd, ERR_ALREADYONCHANNEL(nick, ch->GetName()));
-        return;
-    }
 
     if (ch->GetClientInChannel(nick))
         return;
@@ -168,8 +154,8 @@ void Server::ExistCh(std::vector<std::pair<std::string,std::string> >& token,
     ChanMember m; m.fd = cli->GetFd(); m.nick = nick;
     ch->add_client(m);
 
-    sendResponse(fd, RPL_JOINMSG(cli->getHostname(), cli->getIpAdd(), ch->GetName()));
-  
+    sendResponse(fd, RPL_JOINMSG(nick + "!", cli->getIpAdd(), ch->GetName()));
+    
     if (!ch->GetTopicName().empty()) {
         sendResponse(fd, RPL_TOPICIS(nick, ch->GetName(), ch->GetTopicName()));
 
@@ -183,7 +169,7 @@ void Server::ExistCh(std::vector<std::pair<std::string,std::string> >& token,
     sendResponse(fd, RPL_NAMREPLY(nick, ch->GetName(), ch->clientChannel_list()));
     sendResponse(fd, RPL_ENDOFNAMES(nick, ch->GetName()));
     sendResponse(fd, RPL_CREATIONTIME(nick, ch->GetName(), ch->get_creationtime()));
-    ch->sendTo_all(RPL_JOINMSG(cli->getHostname(), cli->getIpAdd(), ch->GetName()), fd);
+    ch->sendTo_all(RPL_JOINMSG(nick + "!", cli->getIpAdd(), ch->GetName()), fd);
 }
 
 
@@ -204,7 +190,7 @@ void Server::NotExistCh(std::vector<std::pair<std::string,std::string> >& token,
     ChanMember op; op.fd = cli->GetFd(); op.nick = cli->GetNickName();
     ch->add_admin(op);
 
-    sendResponse(fd, RPL_JOINMSG(cli->getHostname(), cli->getIpAdd(), ch->GetName()));
+    sendResponse(fd, RPL_JOINMSG(cli->GetNickName() + "!", cli->getIpAdd(), ch->GetName()));
     sendResponse(fd, RPL_NOTOPIC(cli->GetNickName(), ch->GetName()));
     sendResponse(fd, RPL_NAMREPLY(cli->GetNickName(), ch->GetName(), ch->clientChannel_list()));
     sendResponse(fd, RPL_ENDOFNAMES(cli->GetNickName(), ch->GetName()));

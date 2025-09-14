@@ -7,14 +7,13 @@ Server::Server(int port, const std::string &password)
 
 Server::~Server() 
 {
-    //close_fds();
     for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) 
     {
-        delete it->second;
+        delete it->second;//channel obj
     }
-    _channels.clear();
-    _pollfds.clear();
-    _clients.clear();
+    _channels.clear();//map empty
+    _pollfds.clear();//socket sever was hoding
+    _clients.clear();//map of clients
 }
 
 void Server::start() 
@@ -27,8 +26,10 @@ void Server::start()
 void Server::setupServerSocket() 
 {
     _server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (_server_fd < 0) errorExit("socket() failed");
-
+    if (_server_fd < 0) 
+    {
+        errorExit("socket() failed");
+    }
     int opt = 1;
     if (setsockopt(_server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
         errorExit("setsockopt() failed");  //eth fail aayal bind() failed: Address already in use enna error kanicku
@@ -69,9 +70,11 @@ void Server::eventLoop()
 
         for (size_t i = 0; i < _pollfds.size(); i++) {
             if (_pollfds[i].revents & POLLIN) {
-                if (_pollfds[i].fd == _server_fd) {
+                if (_pollfds[i].fd == _server_fd) //this is the listening socket, not a client.
+                {
                     handleNewConnection();
-                } else {
+                } else 
+                {
                     handleClientInput(_pollfds[i].fd);
                 }
             }
@@ -84,7 +87,7 @@ void Server::eventLoop()
 
 void Server::handleNewConnection() {
     struct sockaddr_in client_addr;
-    std::memset(&client_addr, 0, sizeof(client_addr)); // Fix: zero-initialize
+    std::memset(&client_addr, 0, sizeof(client_addr));
     socklen_t addrlen = sizeof(client_addr);
 
     int client_fd = accept(_server_fd, (struct sockaddr *)&client_addr, &addrlen);
@@ -110,18 +113,38 @@ void Server::SignalHandler(int signum) {
     Server::Signal = true;
 }
 
+// void Server::close_fds() {
+//     // Disconnect all clients
+//     for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+//         std::cout << "Client " << it->first << " Disconnected" << std::endl;
+//         close(it->first);
+//     }
+//     // Disconnect server socket
+//     if (_server_fd != -1) {
+//         std::cout << "Server " << _server_fd << " Disconnected" << std::endl;
+//         close(_server_fd);
+//         _server_fd = -1;
+//     }
+// }
 void Server::close_fds() {
     // Disconnect all clients
-    for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
-        std::cout << "Client " << it->first << " Disconnected" << std::endl;
-        close(it->first);
+    for (size_t i = 0; i < _pollfds.size(); ++i) {
+        int fd = _pollfds[i].fd;
+        if (fd != _server_fd) { // Skip the server socket
+            std::cout << "Client " << fd << " Disconnected" << std::endl;
+            close(fd);
+        }
     }
+
     // Disconnect server socket
     if (_server_fd != -1) {
         std::cout << "Server " << _server_fd << " Disconnected" << std::endl;
         close(_server_fd);
         _server_fd = -1;
     }
+
+    _pollfds.clear();
+    _clients.clear();
 }
 
 void Server::disconnectClient(int fd) 

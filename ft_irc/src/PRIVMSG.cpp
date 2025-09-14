@@ -26,7 +26,7 @@ void Server::PRIVMSG(std::string cmd, int fd)
         sendResponse(fd, ERR_NOTEXTTOSEND(sender->GetNickName()));
         return;
     }
-    std::string line = ":" + sender->getHostname() + "@" + sender->getIpAdd() + " PRIVMSG " + target + " :" + msg + CRLF;
+    std::string line = ":" + sender->GetNickName() + "!" + "@" + sender->getIpAdd() + " PRIVMSG " + target + " :" + msg + CRLF;
 
     if (target[0] == '#') {
         std::string chNoHash = target.substr(1);
