@@ -6,9 +6,8 @@
 #include <map>
 #include <vector>
 #include <netinet/in.h>
-#include <iostream>    // for std::cout, std::endl
-#include <sstream>     // for std::istringstream
-
+#include <iostream>
+#include <sstream> 
 #include <utility>  
 #include <poll.h>
 #include <unistd.h>
@@ -35,9 +34,7 @@ class Server
 private:
     int _port;
     std::string _password;
-    static bool Signal;  
-
-    
+    static bool Signal;   
     int _server_fd;
     struct sockaddr_in _address;
 
@@ -52,7 +49,6 @@ private:
     void makeNonBlocking(int fd);
     void handleNewConnection();
     void handleClientInput(int fd);
-    void sendClientData(int fd);
     void disconnectClient(int fd);
     void errorExit(const std::string &msg);
 
@@ -65,7 +61,6 @@ private:
     int  SplitJoin(std::vector<std::pair<std::string,std::string> >& out, std::string cmd, int fd);
     void ExistCh(std::vector<std::pair<std::string,std::string> >& token, int i, Channel* ch, int fd);
     void NotExistCh(std::vector<std::pair<std::string,std::string> >& token, int i, int fd);
-
     void sendResponse(int fd, const std::string& msg);  // wrapper
     Client* findClientByNick(const std::string& nick);   
 
@@ -76,11 +71,7 @@ public:
     ~Server();
 
     void start();
-
-    void sendToClient(int fd, const std::string &msg);
-   void init(int port, const std::string& pass);
     void close_fds();
-
     void eventLoop();
     //insha
     int  GetFd();

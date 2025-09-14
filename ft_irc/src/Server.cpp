@@ -7,9 +7,9 @@ Server::Server(int port, const std::string &password)
 
 Server::~Server() 
 {
-    close_fds();
-    // Free all dynamically allocated Channel objects
-    for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+    //close_fds();
+    for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) 
+    {
         delete it->second;
     }
     _channels.clear();
@@ -43,7 +43,7 @@ void Server::setupServerSocket()
     if (bind(_server_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0)
         errorExit("bind() failed");
 
-    if (listen(_server_fd, 10) < 0)
+    if (listen(_server_fd, 50) < 0)
         errorExit("listen() failed");
 
     struct pollfd pfd;
@@ -63,7 +63,7 @@ void Server::makeNonBlocking(int fd)
 void Server::eventLoop()
 {
     while (!Signal) 
-    {  // stop when signal is received
+    {
         int ret = poll(&_pollfds[0], _pollfds.size(), -1);
         if (ret < 0) continue;
 
@@ -80,7 +80,6 @@ void Server::eventLoop()
     close_fds();
     std::cout << "The Server Closed!" << std::endl;
 }
-
 
 
 void Server::handleNewConnection() {
@@ -103,7 +102,7 @@ void Server::handleNewConnection() {
 
     std::cout << "[Server] Client " << client_fd << " is connected." << std::endl;
 }
-bool Server::Signal = false;  // definition
+bool Server::Signal = false;
 
 void Server::SignalHandler(int signum) {
     (void)signum;
@@ -117,7 +116,6 @@ void Server::close_fds() {
         std::cout << "Client " << it->first << " Disconnected" << std::endl;
         close(it->first);
     }
-
     // Disconnect server socket
     if (_server_fd != -1) {
         std::cout << "Server " << _server_fd << " Disconnected" << std::endl;
@@ -140,7 +138,8 @@ void Server::disconnectClient(int fd)
     }
 }
 
-void Server::handleClientInput(int fd) {
+void Server::handleClientInput(int fd) 
+{
     char buffer[512];
     int bytes = recv(fd, buffer, sizeof(buffer) - 1, 0);
     if (bytes <= 0) {
@@ -161,9 +160,6 @@ void Server::handleClientInput(int fd) {
         parse(msg, fd);  //insha 
     }
 }
-
-
-
 
 void Server::errorExit(const std::string &msg)
 {

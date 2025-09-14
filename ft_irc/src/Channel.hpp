@@ -74,7 +74,7 @@ public:
     int         GetClientsNumber();
     bool        Gettopic_restriction() const;
     bool        getModeAtindex(size_t index);
-    bool        clientInChannel(std::string &nick);
+
     std::string GetTopicName();
     std::string GetPassword();
     std::string GetName();
@@ -97,7 +97,6 @@ public:
 
     void sendTo_all(std::string rpl1);
     void sendTo_all(std::string rpl1, int exceptFd);
-    bool isAdminNick(const std::string& nick) const;
 };
 
 #endif

@@ -128,6 +128,10 @@ void Server::ExistCh(std::vector<std::pair<std::string,std::string> >& token,
     if (!cli || !ch) return;
 
     const std::string nick = cli->GetNickName();
+    if (ch->GetClientInChannel(nick)) {
+        sendResponse(fd, ERR_ALREADYONCHANNEL(nick, ch->GetName()));
+        return;
+    }
 
     if (ch->GetClientInChannel(nick))
         return;

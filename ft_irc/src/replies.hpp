@@ -1,6 +1,7 @@
 #define once
 #define CRLF "\r\n"
 #define ERR_NOTENOUGHPARAMS(nickname) (": 461 " + nickname + ":Not enough parameters" + CRLF)
+#define ERR_ALREADYONCHANNEL(nick, channel) (":localhost 443 " + nick + " #" + channel + " :You're already on that channel" + CRLF)
 #define ERR_PASSWDMISMATCH(nickname) (": 464 " + nickname + ":Password incorrect" + CRLF)
 #define ERR_ALREADYREGISTRED(nickname) (": 462 " + nickname + ":Unauthorized command (already registered)" + CRLF)
 #define ERR_NICKINUSE(nickname) (": 433 " + nickname + " :Nickname is already in use" + CRLF)

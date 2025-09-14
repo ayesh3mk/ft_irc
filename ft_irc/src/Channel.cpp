@@ -211,16 +211,6 @@ const std::string& Channel::getTopicSetAt() const
     return topic_set_at;
 }
 
-// --- helpers using ChanMember ---
-
-bool Channel::clientInChannel(std::string &nick)
-{
-    for (size_t i = 0; i < clients.size(); ++i)
-        if (clients[i].nick == nick) return true;
-    for (size_t i = 0; i < admins.size(); ++i)
-        if (admins[i].nick == nick) return true;
-    return false;
-}
 
 std::string Channel::clientChannel_list()
 {
@@ -322,12 +312,3 @@ void Channel::sendTo_all(std::string rpl1, int exceptFd)
             if (send(clients[i].fd, rpl1.c_str(), rpl1.size(), 0) == -1)
                 std::cerr << "send() failed to client fd " << clients[i].fd << std::endl;
 }
-
-bool Channel::isAdminNick(const std::string& nick) const
-{
-    for (size_t i = 0; i < admins.size(); ++i)
-        if (admins[i].nick == nick)   // admins is std::vector<ChanMember>
-            return true;
-    return false;
-}
-
