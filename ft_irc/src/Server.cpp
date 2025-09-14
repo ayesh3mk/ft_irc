@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include "Client.hpp"
+#include "Channel.hpp"
 
 Server::Server(int port, const std::string &password)
     : _port(port), _password(password), _server_fd(-1) {}
@@ -7,6 +8,11 @@ Server::Server(int port, const std::string &password)
 Server::~Server() 
 {
     close_fds();
+    // Free all dynamically allocated Channel objects
+    for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        delete it->second;
+    }
+    _channels.clear();
     _pollfds.clear();
     _clients.clear();
 }
@@ -69,10 +75,6 @@ void Server::eventLoop()
                     handleClientInput(_pollfds[i].fd);
                 }
             }
-
-            if (_pollfds[i].revents & POLLOUT) {
-                sendClientData(_pollfds[i].fd);
-            }
         }
     }
     close_fds();
@@ -83,6 +85,7 @@ void Server::eventLoop()
 
 void Server::handleNewConnection() {
     struct sockaddr_in client_addr;
+    std::memset(&client_addr, 0, sizeof(client_addr)); // Fix: zero-initialize
     socklen_t addrlen = sizeof(client_addr);
 
     int client_fd = accept(_server_fd, (struct sockaddr *)&client_addr, &addrlen);
@@ -93,6 +96,7 @@ void Server::handleNewConnection() {
     struct pollfd pfd;
     pfd.fd = client_fd;
     pfd.events = POLLIN;
+    pfd.revents = 0; // Fix: initialize revents
     _pollfds.push_back(pfd);
 
     _clients.insert(std::make_pair(client_fd, Client(client_fd)));
@@ -158,26 +162,8 @@ void Server::handleClientInput(int fd) {
     }
 }
 
-void Server::sendClientData(int fd) 
-{
-    Client &client = _clients[fd];
-    std::string &buf = client.getBufferOutRef();
-    if (buf.empty()) return;
 
-    int bytes = send(fd, buf.c_str(), buf.size(), 0);
-    if (bytes > 0) {
-        buf.erase(0, bytes);
-    } else if (bytes < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-        disconnectClient(fd);
-    }
-}
 
-void Server::sendToClient(int fd, const std::string &msg) 
-{
-    Client &client = _clients[fd];
-    std::string &buf = client.getBufferOutRef();
-    buf += msg + "\r\n";
-}
 
 void Server::errorExit(const std::string &msg)
 {
